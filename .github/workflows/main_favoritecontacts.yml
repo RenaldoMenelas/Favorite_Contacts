@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - FavoriteContacts
+name: Build and deploy Python and React app to Azure Web App - FavoriteContacts
 
 on:
   push:
@@ -26,22 +26,30 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
-      
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-        
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+
+      - name: Install Python dependencies
+        run: pip install -r project/python/requirements.txt
+
+      # Add steps to build React app
+      - name: Setup Node.js for React app
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # specify your Node.js version
+
+      - name: Install and build React app
+        run: |
+          cd project/react/frontend
+          npm install
+          npm run build
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: zip -r release.zip project/python/* project/react/frontend/build/* -x "project/python/venv/*" "project/react/frontend/node_modules/*"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v3
         with:
-          name: python-app
-          path: |
-            release.zip
-            !venv/
+          name: full-app
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -50,18 +58,17 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # Required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
-          name: python-app
+          name: full-app
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -69,10 +76,11 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_7A615551117C43A194978CC0833FD40E }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5A9115DABB4B4C16BE633CCE17671D32 }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
           app-name: 'FavoriteContacts'
           slot-name: 'Production'
+
           
