@@ -28,7 +28,7 @@ jobs:
           source venv/bin/activate
 
       - name: Install Python dependencies
-        run: pip install -r project/python/requirements.txt
+        run: pip install -r project/python/backend/requirements.txt
 
       # Add steps to build React app
       - name: Setup Node.js for React app
