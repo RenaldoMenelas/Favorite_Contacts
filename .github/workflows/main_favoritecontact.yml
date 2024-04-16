@@ -76,9 +76,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5188E2F9F4984D92B830B295EB525246 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B475327404C44F10970F4E5787E7D1E8 }}
           
-      - name: Deploy to Azure Web App
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          app-name: 'FavoriteContacts'
+          app-name: 'favoriteContact'
           slot-name: 'Production'
+            
